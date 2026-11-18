@@ -14,6 +14,8 @@ export interface LanguagesSettings {
   repos: Record<string, number>;
   /** Fold the remaining languages into an "Other" entry. */
   other: boolean;
+  /** The display styles: one language at a time (slides), or all of them on lines with their share. */
+  layout: 'slides' | 'list';
 }
 
 export const MAX_LANGUAGES = 6;
@@ -22,12 +24,13 @@ export const languages: CardDef<'languages', LanguagesSettings, LanguageItem[]> 
   name: 'languages',
   on: true,
   alt: 'Most used languages',
-  settings: { title: 'Most used languages', count: 6, hide: [], repos: {}, other: true },
-  shape: { title: 'string?', count: 'number', hide: 'string[]', repos: 'weights', other: 'boolean' },
+  settings: { title: 'Most used languages', count: 6, hide: [], repos: {}, other: true, layout: 'slides' },
+  shape: { title: 'string?', count: 'number', hide: 'string[]', repos: 'weights', other: 'boolean', layout: 'string' },
   check: (s) => {
     if (s.count > MAX_LANGUAGES) throw new ConfigError(`"cards.languages.count" must be at most ${MAX_LANGUAGES}, "Other" included`);
+    if (s.layout !== 'slides' && s.layout !== 'list') throw new ConfigError('"cards.languages.layout" must be "slides" or "list"');
   },
   data: languagesData,
   classic: (data, theme, config) => renderLanguages(data, theme, config),
-  display: (data, style, config) => renderDisplayLanguages(data, config.cards.languages.title, style),
+  display: (data, style, config) => renderDisplayLanguages(data, config.cards.languages, style),
 };

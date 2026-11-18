@@ -207,6 +207,7 @@ cards:
     hide: []              # language names; their share is dropped
     repos: {}             # weight per repo, "repo" for your own, "owner/repo" otherwise; 0 leaves it out
     other: true           # fold the rest into "Other"; false: the shown ones share 100%
+    layout: slides        # displays only: slides (one at a time) or list (all on lines, with their share)
   contributions:
     title: Notable contributions
     count: 6              # 3 in view at a time; the rest scroll past in a loop

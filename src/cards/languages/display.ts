@@ -9,8 +9,47 @@ import { fit, titleLine } from '../../display/text.ts';
 const BAR = { col: 4, row: 54, cols: COLS - 8, rows: 6 };
 const px = (cells: number) => cells * PITCH;
 
-export function renderDisplayLanguages(items: LanguageItem[], title: string | null, style: Style): string {
+/**
+ * The languages as a list: one line each, the name on the left, its share on the right, joined by a
+ * dotted leader. The rows share the height, so fewer languages get more air. Still, not a slideshow:
+ * the card is read, not watched.
+ */
+function renderList(items: LanguageItem[], title: string | null, style: Style, header: string): string {
   const { look } = style;
+  const shown = items.slice(0, 7);
+  const LINE = Math.min(10, Math.floor(58 / shown.length));
+  const TOP = 11;
+  const names: Cell[] = [];
+  const values: Cell[] = [];
+  const leaders: Cell[] = [];
+  shown.forEach((language, i) => {
+    const row = TOP + i * LINE;
+    const percent = `${language.percent.toFixed(1)}%`;
+    const percentCol = COLS - 4 - textWidth(percent);
+    const name = fit(language.name.toUpperCase(), Math.max(1, percentCol - 14));
+    names.push(...textCells(name, 4, row));
+    values.push(...textCells(percent, percentCol, row));
+    for (let c = 4 + textWidth(name) + 4; c < percentCol - 4; c += 3) leaders.push([c, row + 3]);
+  });
+  return frame({
+    title: title ?? 'Most used languages',
+    desc: items.map((l) => `${l.name} ${l.percent.toFixed(1)}%`).join(', '),
+    ...style, css: '',
+    body:
+      header +
+      path(style, leaders, look.lit, `fill-opacity="${(look.dim * 0.35).toFixed(2)}"`) +
+      path(style, names, look.lit, `fill-opacity="${look.dim}"`) +
+      path(style, values, look.lit),
+  });
+}
+
+export function renderDisplayLanguages(
+  items: LanguageItem[],
+  settings: { title: string | null; layout: 'slides' | 'list' },
+  style: Style,
+): string {
+  const { look } = style;
+  const { title, layout } = settings;
   const header = titleLine(title, style);
   if (!items.length) {
     return frame({
@@ -18,6 +57,7 @@ export function renderDisplayLanguages(items: LanguageItem[], title: string | nu
       body: header + path(style, textCells('NO DATA YET', 4, 24), look.lit),
     });
   }
+  if (layout === 'list') return renderList(items, title, style, header);
 
   const slides: Item[][] = items.map((l, i) => {
     const counter = `${i + 1}/${items.length}`;
